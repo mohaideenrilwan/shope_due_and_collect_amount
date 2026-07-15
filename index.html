@@ -1,0 +1,1560 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1E2A44">
+<title>Khata — Due &amp; Collection Book</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+/* ============ TOKENS ============ */
+:root{
+  --ink:#1E2A44;
+  --ink-2:#2E3B5C;
+  --ink-soft:#5B6472;
+  --paper:#EEF1EA;
+  --card:#FCFBF7;
+  --card-line:#E1DFD2;
+  --brass:#A9782E;
+  --brass-dark:#7E5B21;
+  --brass-tint:#F1E6D0;
+  --due:#B23F32;
+  --due-tint:#F4DFDA;
+  --paid:#2F6B4F;
+  --paid-tint:#DCEAE1;
+  --font-d:'Fraunces',Georgia,serif;
+  --font-b:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;
+  --radius:16px;
+  --radius-sm:10px;
+  --shadow:0 1px 2px rgba(30,42,68,.07),0 6px 16px rgba(30,42,68,.08);
+  --nav-h:64px;
+  --safe-b:env(safe-area-inset-bottom,0px);
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{
+  font-family:var(--font-b);
+  background:var(--paper);
+  color:var(--ink);
+  -webkit-font-smoothing:antialiased;
+  min-height:100vh;
+}
+h1,h2,h3,.disp{font-family:var(--font-d);letter-spacing:-0.01em;}
+button{font-family:inherit;}
+input,select,textarea{font-family:inherit;}
+::selection{background:var(--brass-tint);}
+.num{font-variant-numeric:tabular-nums;font-feature-settings:"tnum";}
+a{color:inherit;}
+
+/* ============ LAYOUT SHELL ============ */
+#app{min-height:100vh;display:flex;flex-direction:column;}
+.topbar{
+  position:sticky;top:0;z-index:30;
+  background:var(--ink);
+  color:#F4F1E6;
+  padding:14px 16px 12px;
+}
+.topbar-row{display:flex;align-items:center;gap:12px;}
+.stamp{
+  width:38px;height:38px;border-radius:50%;
+  background:radial-gradient(circle at 32% 30%, var(--brass) 0%, var(--brass-dark) 78%);
+  display:flex;align-items:center;justify-content:center;
+  flex:0 0 auto;
+  box-shadow:inset 0 0 0 2px rgba(255,255,255,.18);
+}
+.stamp svg{width:20px;height:20px;stroke:#fff;}
+.wordmark{flex:1;min-width:0;}
+.wordmark .brand{font-family:var(--font-d);font-size:20px;font-weight:600;line-height:1.1;}
+.wordmark .tag{font-size:11px;color:#B9BFCF;letter-spacing:.03em;}
+.icon-btn{
+  width:36px;height:36px;border-radius:50%;border:none;background:rgba(255,255,255,.08);
+  color:#F4F1E6;display:flex;align-items:center;justify-content:center;cursor:pointer;
+  flex:0 0 auto;
+}
+.icon-btn svg{width:18px;height:18px;stroke:currentColor;}
+.icon-btn:active{background:rgba(255,255,255,.18);}
+
+.stats-strip{display:flex;gap:10px;margin-top:12px;overflow-x:auto;padding-bottom:2px;}
+.stat-pill{
+  flex:1 1 0;min-width:128px;
+  background:rgba(255,255,255,.06);
+  border:1px solid rgba(255,255,255,.12);
+  border-radius:var(--radius-sm);
+  padding:9px 12px;
+}
+.stat-pill .lbl{font-size:10.5px;color:#B9BFCF;text-transform:uppercase;letter-spacing:.06em;}
+.stat-pill .val{font-family:var(--font-d);font-size:18px;font-weight:600;margin-top:2px;}
+.stat-pill.due .val{color:#E8A79A;}
+.stat-pill.paid .val{color:#9FD4B7;}
+
+/* main shell */
+.shell{flex:1;display:flex;width:100%;max-width:1080px;margin:0 auto;}
+.sidebar{display:none;}
+main{flex:1;min-width:0;padding:16px 16px calc(var(--nav-h) + 28px);}
+
+@media(min-width:900px){
+  .topbar{padding:16px 28px;}
+  .shell{gap:0;}
+  .sidebar{
+    display:flex;flex-direction:column;gap:4px;width:220px;flex:0 0 auto;
+    padding:20px 12px;border-right:1px solid var(--card-line);
+    position:sticky;top:80px;align-self:flex-start;height:calc(100vh - 80px);
+  }
+  .sidebar .side-link{
+    display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:var(--radius-sm);
+    color:var(--ink-soft);text-decoration:none;cursor:pointer;border:none;background:none;
+    font-size:14.5px;font-weight:500;text-align:left;width:100%;
+  }
+  .sidebar .side-link svg{width:18px;height:18px;stroke:currentColor;flex:0 0 auto;}
+  .sidebar .side-link.active{background:var(--brass-tint);color:var(--brass-dark);font-weight:600;}
+  .sidebar .side-add{
+    margin-top:8px;background:var(--brass);color:#fff;border-radius:var(--radius-sm);
+    padding:11px 12px;font-weight:600;
+  }
+  .sidebar .side-add:hover{background:var(--brass-dark);}
+  main{padding:28px 32px 40px;}
+  .bottomnav{display:none !important;}
+}
+
+/* bottom nav (mobile) */
+.bottomnav{
+  position:fixed;left:0;right:0;bottom:0;z-index:30;
+  height:calc(var(--nav-h) + var(--safe-b));
+  padding-bottom:var(--safe-b);
+  background:var(--card);
+  border-top:1px solid var(--card-line);
+  display:flex;align-items:stretch;
+  box-shadow:0 -2px 10px rgba(30,42,68,.06);
+}
+.bottomnav button{
+  flex:1;border:none;background:none;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:3px;color:var(--ink-soft);font-size:10.5px;font-weight:600;cursor:pointer;
+}
+.bottomnav button svg{width:21px;height:21px;stroke:currentColor;}
+.bottomnav button.active{color:var(--brass-dark);}
+.fab{
+  position:fixed;right:18px;bottom:calc(var(--nav-h) + var(--safe-b) + 14px);z-index:31;
+  width:56px;height:56px;border-radius:50%;border:none;cursor:pointer;
+  background:var(--brass);color:#fff;box-shadow:0 6px 16px rgba(169,120,46,.45);
+  display:flex;align-items:center;justify-content:center;
+}
+.fab svg{width:24px;height:24px;stroke:#fff;stroke-width:2.2;}
+@media(min-width:900px){
+  .fab{right:32px;bottom:32px;}
+}
+
+/* ============ VIEWS ============ */
+.view{display:none;}
+.view.active{display:block;animation:fadein .18s ease;}
+@keyframes fadein{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:none;}}
+
+.section-title{font-size:12px;text-transform:uppercase;letter-spacing:.07em;color:var(--ink-soft);font-weight:700;margin:22px 0 10px;}
+.section-title:first-child{margin-top:0;}
+
+/* dashboard hero */
+.hero{
+  background:var(--ink);color:#F4F1E6;border-radius:var(--radius);
+  padding:22px 20px;text-align:center;position:relative;overflow:hidden;
+}
+.hero::before{
+  content:"";position:absolute;inset:0;
+  background:radial-gradient(circle at 85% -10%, rgba(169,120,46,.35), transparent 55%);
+}
+.hero .eyebrow{position:relative;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#B9BFCF;}
+.hero .net{position:relative;font-family:var(--font-d);font-size:40px;font-weight:600;margin-top:6px;line-height:1.05;}
+.hero .net.negative{color:#E8A79A;}
+.hero .sub{position:relative;font-size:12.5px;color:#B9BFCF;margin-top:6px;}
+
+.hero-breakdown{display:flex;gap:10px;margin-top:14px;}
+.bd-card{
+  flex:1;background:var(--card);border:1px solid var(--card-line);border-radius:var(--radius-sm);
+  padding:12px 13px;
+}
+.bd-card .lbl{font-size:11px;color:var(--ink-soft);display:flex;align-items:center;gap:6px;}
+.bd-card .lbl svg{width:14px;height:14px;stroke:currentColor;}
+.bd-card .amt{font-family:var(--font-d);font-size:19px;font-weight:600;margin-top:4px;}
+.bd-card.due .amt{color:var(--due);}
+.bd-card.paid .amt{color:var(--paid);}
+
+.quick-actions{display:flex;gap:10px;margin-top:16px;}
+.qa-btn{
+  flex:1;padding:12px 10px;border-radius:var(--radius-sm);border:1px solid var(--card-line);
+  background:var(--card);font-weight:600;font-size:13.5px;cursor:pointer;color:var(--ink);
+  display:flex;align-items:center;justify-content:center;gap:7px;
+}
+.qa-btn svg{width:16px;height:16px;stroke:currentColor;}
+.qa-btn.primary{background:var(--brass);border-color:var(--brass);color:#fff;}
+
+/* party list */
+.searchbar{
+  display:flex;align-items:center;gap:8px;background:var(--card);border:1px solid var(--card-line);
+  border-radius:var(--radius-sm);padding:9px 12px;
+}
+.searchbar svg{width:16px;height:16px;stroke:var(--ink-soft);flex:0 0 auto;}
+.searchbar input{border:none;outline:none;background:none;flex:1;font-size:14px;color:var(--ink);}
+.list-head{display:flex;gap:10px;margin-bottom:14px;}
+.list-head .searchbar{flex:1;min-width:0;}
+.list-add-btn{
+  flex:0 0 auto;width:42px;height:42px;border-radius:var(--radius-sm);border:none;background:var(--brass);
+  color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;
+}
+.list-add-btn svg{width:19px;height:19px;stroke:currentColor;}
+
+.party-card{
+  display:flex;align-items:center;gap:12px;background:var(--card);border:1px solid var(--card-line);
+  border-radius:var(--radius-sm);padding:12px 14px;margin-bottom:9px;cursor:pointer;
+}
+.party-card:active{background:var(--brass-tint);}
+.avatar{
+  width:40px;height:40px;border-radius:50%;background:var(--ink);color:#F4F1E6;
+  display:flex;align-items:center;justify-content:center;font-family:var(--font-d);font-weight:600;font-size:15px;
+  flex:0 0 auto;
+}
+.party-main{flex:1;min-width:0;}
+.party-main .nm{font-weight:600;font-size:14.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.party-main .ph{font-size:12px;color:var(--ink-soft);margin-top:1px;}
+.bal-pill{
+  padding:6px 10px;border-radius:20px;font-size:12.5px;font-weight:700;white-space:nowrap;
+}
+.bal-pill.due{background:var(--due-tint);color:var(--due);}
+.bal-pill.paid{background:var(--paid-tint);color:var(--paid);}
+
+.empty-state{
+  text-align:center;padding:44px 20px;color:var(--ink-soft);
+}
+.empty-state svg{width:40px;height:40px;stroke:var(--card-line);margin-bottom:10px;}
+.empty-state .t{font-weight:600;color:var(--ink);margin-bottom:4px;}
+.empty-state .s{font-size:13px;}
+
+/* party detail */
+.back-row{display:flex;align-items:center;gap:10px;margin-bottom:14px;}
+.back-btn{
+  width:32px;height:32px;border-radius:50%;border:1px solid var(--card-line);background:var(--card);
+  display:flex;align-items:center;justify-content:center;cursor:pointer;flex:0 0 auto;
+}
+.back-btn svg{width:16px;height:16px;stroke:var(--ink);}
+.detail-head{
+  background:var(--card);border:1px solid var(--card-line);border-radius:var(--radius);
+  padding:18px;text-align:center;position:relative;
+}
+.detail-head .type-tag{
+  display:inline-block;font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;font-weight:700;
+  padding:3px 9px;border-radius:20px;background:var(--brass-tint);color:var(--brass-dark);margin-bottom:8px;
+}
+.detail-head .nm{font-family:var(--font-d);font-size:21px;font-weight:600;}
+.detail-head .ph{font-size:12.5px;color:var(--ink-soft);margin-top:2px;}
+.detail-head .balnum{font-family:var(--font-d);font-size:32px;font-weight:600;margin-top:12px;}
+.detail-head .balnum.due{color:var(--due);}
+.detail-head .balnum.paid{color:var(--paid);}
+.detail-head .ballbl{font-size:11.5px;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.05em;margin-top:2px;}
+.detail-actions{position:absolute;top:14px;right:14px;display:flex;gap:6px;}
+
+.detail-cta{display:flex;gap:10px;margin-top:14px;}
+.detail-cta button{
+  flex:1;padding:11px;border-radius:var(--radius-sm);border:none;font-weight:700;font-size:13.5px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;gap:6px;
+}
+.detail-cta svg{width:15px;height:15px;stroke:currentColor;}
+.detail-cta .cta-due{background:var(--due-tint);color:var(--due);}
+.detail-cta .cta-paid{background:var(--paid-tint);color:var(--paid);}
+
+/* ledger list — ruled ledger paper feel with a stitched spine */
+.ledger{
+  margin-top:16px;position:relative;padding-left:16px;
+}
+.ledger::before{
+  content:"";position:absolute;left:4px;top:4px;bottom:4px;width:0;
+  border-left:2px dashed var(--card-line);
+}
+.ledger-row{
+  background:var(--card);border:1px solid var(--card-line);border-radius:var(--radius-sm);
+  padding:11px 13px;margin-bottom:8px;position:relative;
+}
+.ledger-row::before{
+  content:"";position:absolute;left:-16px;top:18px;width:12px;height:0;border-top:2px dashed var(--card-line);
+}
+.lr-top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;}
+.lr-type{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;padding:2px 8px;border-radius:20px;}
+.lr-type.DUE{background:var(--due-tint);color:var(--due);}
+.lr-type.PAID{background:var(--paid-tint);color:var(--paid);}
+.lr-amt{font-family:var(--font-d);font-weight:600;font-size:16px;}
+.lr-amt.DUE{color:var(--due);}
+.lr-amt.PAID{color:var(--paid);}
+.lr-bottom{display:flex;justify-content:space-between;align-items:center;margin-top:6px;}
+.lr-date{font-size:11.5px;color:var(--ink-soft);}
+.lr-note{font-size:12px;color:var(--ink-soft);margin-top:3px;font-style:italic;}
+.lr-del{background:none;border:none;color:var(--ink-soft);cursor:pointer;padding:2px;}
+.lr-del svg{width:14px;height:14px;stroke:currentColor;}
+
+/* ============ MODALS / SHEETS ============ */
+.overlay{
+  position:fixed;inset:0;background:rgba(30,42,68,.42);z-index:50;
+  display:none;align-items:flex-end;justify-content:center;
+}
+.overlay.open{display:flex;}
+@media(min-width:640px){.overlay{align-items:center;}}
+.sheet{
+  background:var(--card);width:100%;max-width:480px;border-radius:20px 20px 0 0;
+  padding:18px 18px calc(18px + var(--safe-b));max-height:88vh;overflow-y:auto;
+  animation:slideup .2s ease;
+}
+@media(min-width:640px){.sheet{border-radius:20px;margin-bottom:0;}}
+@keyframes slideup{from{transform:translateY(24px);opacity:.5;}to{transform:none;opacity:1;}}
+.sheet-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;}
+.sheet-head h2{font-size:18px;font-weight:600;margin:0;}
+.sheet-close{background:none;border:none;cursor:pointer;color:var(--ink-soft);padding:4px;}
+.sheet-close svg{width:20px;height:20px;stroke:currentColor;}
+
+.field{margin-bottom:14px;}
+.field label{display:block;font-size:12px;font-weight:600;color:var(--ink-soft);margin-bottom:6px;text-transform:uppercase;letter-spacing:.04em;}
+.field input,.field select,.field textarea{
+  width:100%;border:1px solid var(--card-line);border-radius:var(--radius-sm);padding:11px 12px;
+  font-size:15px;color:var(--ink);background:#fff;outline:none;
+}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--brass);}
+.field textarea{resize:vertical;min-height:60px;}
+.amount-input{position:relative;}
+.amount-input .cur{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--ink-soft);font-weight:600;font-size:15px;}
+.amount-input input{padding-left:38px;font-family:var(--font-d);font-size:19px;font-weight:600;}
+
+.seg{display:flex;background:var(--paper);border-radius:var(--radius-sm);padding:3px;gap:3px;}
+.seg button{
+  flex:1;border:none;background:none;padding:9px 8px;border-radius:8px;font-weight:600;font-size:13px;
+  color:var(--ink-soft);cursor:pointer;
+}
+.seg button.active{background:var(--card);color:var(--ink);box-shadow:var(--shadow);}
+.seg button.active.DUE{color:var(--due);}
+.seg button.active.PAID{color:var(--paid);}
+
+.party-picker-list{max-height:180px;overflow-y:auto;border:1px solid var(--card-line);border-radius:var(--radius-sm);margin-top:6px;}
+.pp-item{padding:10px 12px;font-size:14px;cursor:pointer;border-bottom:1px solid var(--card-line);display:flex;justify-content:space-between;}
+.pp-item:last-child{border-bottom:none;}
+.pp-item:active{background:var(--brass-tint);}
+.pp-item .pp-bal{color:var(--ink-soft);font-size:12px;}
+.pp-empty{padding:12px;font-size:13px;color:var(--ink-soft);text-align:center;}
+
+.selected-party{
+  display:flex;align-items:center;justify-content:space-between;background:var(--paper);
+  border-radius:var(--radius-sm);padding:10px 12px;margin-top:8px;font-size:14px;font-weight:600;
+}
+.selected-party button{background:none;border:none;color:var(--brass-dark);font-size:12.5px;font-weight:700;cursor:pointer;}
+
+.btn-block{
+  width:100%;padding:13px;border-radius:var(--radius-sm);border:none;background:var(--brass);color:#fff;
+  font-weight:700;font-size:15px;cursor:pointer;margin-top:4px;
+}
+.btn-block:disabled{opacity:.5;}
+.btn-danger{background:var(--due);}
+.btn-ghost{background:none;color:var(--ink-soft);border:1px solid var(--card-line);margin-top:8px;}
+
+.hint{font-size:12px;color:var(--ink-soft);margin-top:4px;line-height:1.4;}
+.error-text{font-size:12.5px;color:var(--due);margin-top:8px;}
+
+/* toast */
+#toastWrap{position:fixed;left:0;right:0;bottom:calc(var(--nav-h) + var(--safe-b) + 12px);z-index:60;display:flex;flex-direction:column;align-items:center;gap:8px;pointer-events:none;}
+@media(min-width:900px){#toastWrap{bottom:24px;}}
+.toast{
+  background:var(--ink);color:#F4F1E6;padding:11px 18px;border-radius:30px;font-size:13.5px;font-weight:500;
+  box-shadow:var(--shadow);max-width:90vw;text-align:center;
+}
+.toast.success{background:var(--paid);}
+.toast.error{background:var(--due);}
+
+/* connect screen */
+.connect-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;}
+.connect-card{
+  background:var(--card);border-radius:var(--radius);padding:26px 22px;max-width:420px;width:100%;
+  box-shadow:var(--shadow);
+}
+.connect-card .stamp{margin:0 auto 14px;width:48px;height:48px;}
+.connect-card .stamp svg{width:24px;height:24px;}
+.connect-card h1{font-size:22px;text-align:center;margin:0 0 4px;}
+.connect-card p{font-size:13.5px;color:var(--ink-soft);text-align:center;margin:0 0 18px;line-height:1.5;}
+.connect-status{font-size:12.5px;margin-top:8px;text-align:center;}
+.connect-status.ok{color:var(--paid);}
+.connect-status.bad{color:var(--due);}
+
+.loading-row{text-align:center;padding:40px 0;color:var(--ink-soft);font-size:13.5px;}
+.spinner{
+  width:22px;height:22px;border-radius:50%;border:3px solid var(--card-line);border-top-color:var(--brass);
+  margin:0 auto 10px;animation:spin .7s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+.day-group-lbl{font-size:11.5px;font-weight:700;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.05em;margin:16px 0 8px;}
+
+/* ============ REMINDERS ============ */
+.remind-banner{
+  display:flex;align-items:center;gap:12px;background:var(--card);border:1px solid var(--card-line);
+  border-radius:var(--radius);padding:13px 15px;margin-top:14px;cursor:pointer;
+}
+.remind-banner .rb-icon{
+  width:38px;height:38px;border-radius:50%;background:var(--due-tint);color:var(--due);flex:0 0 auto;
+  display:flex;align-items:center;justify-content:center;
+}
+.remind-banner .rb-icon svg{width:19px;height:19px;stroke:currentColor;}
+.remind-banner .rb-main{flex:1;min-width:0;}
+.remind-banner .rb-t{font-weight:700;font-size:14px;}
+.remind-banner .rb-s{font-size:12px;color:var(--ink-soft);margin-top:1px;}
+.remind-banner .rb-arrow{color:var(--ink-soft);flex:0 0 auto;}
+.remind-banner .rb-arrow svg{width:16px;height:16px;stroke:currentColor;}
+
+.remind-sub{display:flex;align-items:center;justify-content:space-between;margin:22px 0 10px;}
+.remind-sub .section-title{margin:0;}
+.btn-round{
+  background:var(--paid);color:#fff;border:none;border-radius:20px;padding:7px 13px;font-size:12.5px;
+  font-weight:700;cursor:pointer;display:flex;align-items:center;gap:5px;
+}
+.btn-round svg{width:13px;height:13px;stroke:currentColor;}
+.btn-round:disabled{opacity:.45;cursor:default;}
+
+.remind-row{
+  display:flex;align-items:center;gap:12px;background:var(--card);border:1px solid var(--card-line);
+  border-radius:var(--radius-sm);padding:11px 13px;margin-bottom:9px;
+}
+.remind-row .rr-main{flex:1;min-width:0;cursor:pointer;}
+.remind-row .rr-main .nm{font-weight:600;font-size:14px;}
+.remind-row .rr-main .meta{font-size:11.5px;color:var(--ink-soft);margin-top:2px;display:flex;gap:8px;flex-wrap:wrap;}
+.remind-row .rr-bal{font-family:var(--font-d);font-weight:600;font-size:15px;color:var(--due);white-space:nowrap;}
+.wa-btn{
+  width:38px;height:38px;border-radius:50%;border:none;background:#25D366;color:#fff;flex:0 0 auto;
+  display:flex;align-items:center;justify-content:center;cursor:pointer;
+}
+.wa-btn svg{width:19px;height:19px;fill:currentColor;}
+.wa-btn.nophone{background:var(--card-line);color:var(--ink-soft);}
+.wa-btn.small{width:32px;height:32px;}
+.wa-btn.small svg{width:16px;height:16px;}
+
+.detail-cta.with-wa{gap:8px;}
+.detail-cta .cta-wa{background:#DDF3E5;color:#1F8447;flex:0 0 48px;}
+
+/* reminder round overlay */
+.round-progress{font-size:12px;color:var(--ink-soft);text-align:center;margin-bottom:4px;font-weight:600;}
+.round-track{height:4px;background:var(--paper);border-radius:4px;overflow:hidden;margin-bottom:18px;}
+.round-track .fill{height:100%;background:var(--brass);transition:width .2s ease;}
+.round-card{
+  background:var(--paper);border-radius:var(--radius);padding:20px;text-align:center;margin-bottom:16px;
+}
+.round-card .avatar{width:54px;height:54px;font-size:19px;margin:0 auto 10px;}
+.round-card .nm{font-family:var(--font-d);font-size:19px;font-weight:600;}
+.round-card .ph{font-size:12.5px;color:var(--ink-soft);margin-top:2px;}
+.round-card .bal{font-family:var(--font-d);font-size:26px;font-weight:600;color:var(--due);margin-top:10px;}
+.round-card .bal-lbl{font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-soft);margin-top:2px;}
+.round-msg{
+  background:#fff;border:1px solid var(--card-line);border-radius:var(--radius-sm);padding:11px 13px;
+  font-size:13px;color:var(--ink-soft);margin-bottom:16px;white-space:pre-wrap;max-height:110px;overflow-y:auto;
+}
+.round-actions{display:flex;gap:10px;}
+.round-actions .btn-block{margin-top:0;}
+.round-send{background:#25D366;display:flex;align-items:center;justify-content:center;gap:8px;}
+.round-send svg{width:17px;height:17px;fill:#fff;}
+.round-empty{text-align:center;padding:30px 10px;color:var(--ink-soft);}
+
+.nav-badge{
+  position:absolute;top:2px;right:calc(50% - 20px);min-width:15px;height:15px;border-radius:8px;
+  background:var(--due);color:#fff;font-size:9.5px;font-weight:700;display:flex;align-items:center;justify-content:center;
+  padding:0 3px;
+}
+.bottomnav button{position:relative;}
+.side-link{position:relative;}
+.side-link .nav-badge{top:8px;right:auto;left:30px;}
+</style>
+</head>
+<body>
+
+<div id="connectScreen" class="connect-wrap" style="display:none;">
+  <div class="connect-card">
+    <div class="stamp"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="9"/></svg></div>
+    <h1>Connect your Sheet</h1>
+    <p>Khata stores every due and collection in a Google Sheet you own. Paste the Apps Script Web App URL below to connect this device.</p>
+    <div class="field">
+      <label>Web App URL</label>
+      <input type="url" id="connectUrl" placeholder="https://script.google.com/macros/s/…/exec">
+    </div>
+    <button class="btn-block" id="connectBtn">Connect</button>
+    <div class="connect-status" id="connectStatus"></div>
+    <p style="margin-top:16px;font-size:12px;">First time? Open <b>Code.gs</b> from the setup guide, deploy it as a Web App, then paste the URL it gives you here.</p>
+  </div>
+</div>
+
+<div id="app" style="display:none;">
+  <header class="topbar">
+    <div class="topbar-row">
+      <div class="stamp"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="9"/></svg></div>
+      <div class="wordmark">
+        <div class="brand">Khata</div>
+        <div class="tag">Due &amp; collection book</div>
+      </div>
+      <button class="icon-btn" id="settingsBtn" aria-label="Settings">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 00.34 1.87l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.7 1.7 0 00-1.87-.34 1.7 1.7 0 00-1 1.55V21a2 2 0 01-4 0v-.09a1.7 1.7 0 00-1-1.55 1.7 1.7 0 00-1.87.34l-.06.06a2 2 0 11-2.83-2.83l.06-.06a1.7 1.7 0 00.34-1.87 1.7 1.7 0 00-1.55-1H3a2 2 0 010-4h.09a1.7 1.7 0 001.55-1 1.7 1.7 0 00-.34-1.87l-.06-.06a2 2 0 112.83-2.83l.06.06a1.7 1.7 0 001.87.34H9a1.7 1.7 0 001-1.55V3a2 2 0 014 0v.09a1.7 1.7 0 001 1.55 1.7 1.7 0 001.87-.34l.06-.06a2 2 0 112.83 2.83l-.06.06a1.7 1.7 0 00-.34 1.87V9a1.7 1.7 0 001.55 1H21a2 2 0 010 4h-.09a1.7 1.7 0 00-1.55 1z"/></svg>
+      </button>
+    </div>
+    <div class="stats-strip">
+      <div class="stat-pill due"><div class="lbl">Receivable</div><div class="val num" id="topReceivable">Rs. 0</div></div>
+      <div class="stat-pill paid"><div class="lbl">Payable</div><div class="val num" id="topPayable">Rs. 0</div></div>
+    </div>
+  </header>
+
+  <div class="shell">
+    <nav class="sidebar">
+      <button class="side-link" data-view="dashboard"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>Dashboard</button>
+      <button class="side-link" data-view="customers"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7"/></svg>Customers</button>
+      <button class="side-link" data-view="suppliers"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8"><rect x="2" y="9" width="13" height="9" rx="1"/><path d="M15 12h3l4 3v3h-7"/><circle cx="7" cy="20" r="1.6"/><circle cx="18" cy="20" r="1.6"/></svg>Suppliers</button>
+      <button class="side-link" data-view="reminders"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8"><path d="M18 8a6 6 0 10-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 01-3.4 0"/></svg>Reminders<span class="nav-badge" id="sideRemindBadge" style="display:none;">0</span></button>
+      <button class="side-link side-add" id="sideAddBtn">+ Add entry</button>
+    </nav>
+
+    <main>
+      <div class="view active" id="view-dashboard">
+        <div class="hero">
+          <div class="eyebrow">Net position</div>
+          <div class="net num" id="netPosition">Rs. 0</div>
+          <div class="sub" id="netSub">Receivable minus payable</div>
+          <div class="hero-breakdown">
+            <div class="bd-card due">
+              <div class="lbl"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7"/></svg>From customers</div>
+              <div class="amt num" id="bdReceivable">Rs. 0</div>
+            </div>
+            <div class="bd-card paid">
+              <div class="lbl"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8"><rect x="2" y="9" width="13" height="9" rx="1"/><path d="M15 12h3l4 3v3h-7"/></svg>To suppliers</div>
+              <div class="amt num" id="bdPayable">Rs. 0</div>
+            </div>
+          </div>
+          <div class="quick-actions">
+            <button class="qa-btn primary" id="qaDue"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>Add due</button>
+            <button class="qa-btn" id="qaPaid"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>Collect / pay</button>
+          </div>
+        </div>
+
+        <div class="remind-banner" id="dashRemindBanner" style="display:none;">
+          <div class="rb-icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8"><path d="M18 8a6 6 0 10-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 01-3.4 0"/></svg></div>
+          <div class="rb-main">
+            <div class="rb-t" id="dashRemindTitle">0 customers have a due balance</div>
+            <div class="rb-s">Tap to send WhatsApp reminders</div>
+          </div>
+          <div class="rb-arrow"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg></div>
+        </div>
+
+        <div class="section-title">Today</div>
+        <div id="todayList"></div>
+
+        <div class="section-title">Recent activity</div>
+        <div id="recentList"></div>
+      </div>
+
+      <div class="view" id="view-customers">
+        <div class="list-head">
+          <div class="searchbar">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+            <input type="text" id="customerSearch" placeholder="Search customers…">
+          </div>
+          <button class="list-add-btn" id="addCustomerBtn" title="Add customer"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.2"><path d="M12 5v14M5 12h14"/></svg></button>
+        </div>
+        <div id="customerList"></div>
+      </div>
+
+      <div class="view" id="view-suppliers">
+        <div class="list-head">
+          <div class="searchbar">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+            <input type="text" id="supplierSearch" placeholder="Search suppliers…">
+          </div>
+          <button class="list-add-btn" id="addSupplierBtn" title="Add supplier"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.2"><path d="M12 5v14M5 12h14"/></svg></button>
+        </div>
+        <div id="supplierList"></div>
+      </div>
+
+      <div class="view" id="view-partyDetail">
+        <div class="back-row">
+          <button class="back-btn" id="backBtn"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg></button>
+          <div class="section-title" style="margin:0;">Ledger</div>
+        </div>
+        <div class="detail-head">
+          <div class="detail-actions">
+            <button class="icon-btn" style="background:var(--paper);color:var(--ink-soft);" id="editPartyBtn"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4z"/></svg></button>
+            <button class="icon-btn" style="background:var(--due-tint);color:var(--due);" id="deletePartyBtn"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8"><path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m3 0l-1 14a2 2 0 01-2 2H7a2 2 0 01-2-2L4 6"/></svg></button>
+          </div>
+          <div class="type-tag" id="dtType">Customer</div>
+          <div class="nm" id="dtName">—</div>
+          <div class="ph" id="dtPhone"></div>
+          <div class="ph" id="dtAddress" style="display:none;"></div>
+          <div class="ph" id="dtNotes" style="display:none;font-style:italic;"></div>
+          <div class="balnum num" id="dtBalance">Rs. 0</div>
+          <div class="ballbl" id="dtBalanceLbl">Balance</div>
+          <div class="detail-cta with-wa">
+            <button class="cta-due" id="dtAddDue"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg><span id="dtDueLbl">Add due</span></button>
+            <button class="cta-paid" id="dtAddPaid"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg><span id="dtPaidLbl">Collect</span></button>
+            <button class="cta-wa" id="dtWhatsapp" title="Send WhatsApp reminder"><svg viewBox="0 0 24 24" fill="currentColor" width="17" height="17"><path d="M17.5 14.4c-.3-.2-1.8-.9-2-1-.3-.1-.5-.2-.7.1-.2.3-.8 1-.9 1.2-.2.2-.3.2-.6.1-.3-.2-1.3-.5-2.4-1.5-.9-.8-1.5-1.8-1.7-2.1-.2-.3 0-.5.1-.6.1-.1.3-.3.4-.5.2-.2.2-.3.3-.5.1-.2 0-.4 0-.5C10 9 9.4 7.6 9.2 7c-.2-.5-.4-.5-.6-.5h-.5c-.2 0-.5.1-.7.3-.2.3-.9.9-.9 2.2s1 2.5 1.1 2.7c.1.2 2 3 4.7 4.3.7.3 1.2.5 1.6.6.7.2 1.3.2 1.8.1.5-.1 1.8-.7 2-1.5.2-.7.2-1.3.2-1.5-.1-.1-.3-.2-.6-.3z"/><path d="M12 2a10 10 0 00-8.5 15.2L2 22l4.9-1.5A10 10 0 1012 2zm0 18.2c-1.6 0-3.2-.4-4.5-1.2l-.3-.2-3.1 1 1-3-.2-.3A8.2 8.2 0 1112 20.2z"/></svg></button>
+          </div>
+        </div>
+        <div class="ledger" id="ledgerList"></div>
+      </div>
+
+      <div class="view" id="view-reminders">
+        <div class="remind-sub" style="margin-top:0;">
+          <div class="section-title" style="margin:0;">Customers to remind</div>
+          <button class="btn-round" id="startRoundBtn"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.4"><path d="M5 12h14M13 6l6 6-6 6"/></svg>Start round</button>
+        </div>
+        <div id="remindCustomerList"></div>
+
+        <div class="remind-sub" id="remindSupplierHead" style="display:none;">
+          <div class="section-title">Payments you owe suppliers</div>
+        </div>
+        <div id="remindSupplierList"></div>
+      </div>
+    </main>
+  </div>
+
+  <nav class="bottomnav">
+    <button data-view="dashboard"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>Dashboard</button>
+    <button data-view="customers"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7"/></svg>Customers</button>
+    <div style="flex:0 0 56px;"></div>
+    <button data-view="suppliers"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8"><rect x="2" y="9" width="13" height="9" rx="1"/><path d="M15 12h3l4 3v3h-7"/><circle cx="7" cy="20" r="1.6"/><circle cx="18" cy="20" r="1.6"/></svg>Suppliers</button>
+    <button data-view="reminders"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8"><path d="M18 8a6 6 0 10-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 01-3.4 0"/></svg>Remind<span class="nav-badge" id="navRemindBadge" style="display:none;">0</span></button>
+    <button id="navSettings"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 00.34 1.87l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.7 1.7 0 00-1.87-.34 1.7 1.7 0 00-1 1.55V21a2 2 0 01-4 0v-.09a1.7 1.7 0 00-1-1.55 1.7 1.7 0 00-1.87.34l-.06.06a2 2 0 11-2.83-2.83l.06-.06a1.7 1.7 0 00.34-1.87 1.7 1.7 0 00-1.55-1H3a2 2 0 010-4h.09a1.7 1.7 0 001.55-1 1.7 1.7 0 00-.34-1.87l-.06-.06a2 2 0 112.83-2.83l.06.06a1.7 1.7 0 001.87.34H9a1.7 1.7 0 001-1.55V3a2 2 0 014 0v.09a1.7 1.7 0 001 1.55 1.7 1.7 0 001.87-.34l.06-.06a2 2 0 112.83 2.83l-.06.06a1.7 1.7 0 00-.34 1.87V9a1.7 1.7 0 001.55 1H21a2 2 0 010 4h-.09a1.7 1.7 0 00-1.55 1z"/></svg>Settings</button>
+  </nav>
+  <button class="fab" id="fabAdd" aria-label="Add entry"><svg viewBox="0 0 24 24" fill="none" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></button>
+</div>
+
+<!-- ===== Add / Edit Transaction Sheet ===== -->
+<div class="overlay" id="txnOverlay">
+  <div class="sheet">
+    <div class="sheet-head"><h2>New entry</h2><button class="sheet-close" data-close="txnOverlay"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg></button></div>
+
+    <div class="field">
+      <label>Who is this for?</label>
+      <div class="seg" id="txnPartyTypeSeg">
+        <button type="button" class="active" data-val="Customer">Customer</button>
+        <button type="button" data-val="Supplier">Supplier</button>
+      </div>
+    </div>
+
+    <div class="field" id="txnPartyPickField">
+      <label>Party</label>
+      <input type="text" id="txnPartySearch" placeholder="Search or type a new name…">
+      <div class="party-picker-list" id="txnPartyPickerList"></div>
+      <div class="selected-party" id="txnSelectedParty" style="display:none;">
+        <span id="txnSelectedPartyName"></span>
+        <button type="button" id="txnClearParty">change</button>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Entry type</label>
+      <div class="seg" id="txnEntrySeg">
+        <button type="button" class="active DUE" data-val="DUE" id="txnDueOpt">Due</button>
+        <button type="button" class="PAID" data-val="PAID" id="txnPaidOpt">Collected</button>
+      </div>
+      <div class="hint" id="txnEntryHint">Money the customer now owes you.</div>
+    </div>
+
+    <div class="field">
+      <label>Amount</label>
+      <div class="amount-input"><span class="cur">Rs.</span><input type="number" inputmode="decimal" id="txnAmount" placeholder="0.00" min="0" step="0.01"></div>
+    </div>
+
+    <div class="field">
+      <label>Date</label>
+      <input type="date" id="txnDate">
+    </div>
+
+    <div class="field">
+      <label>Note (optional)</label>
+      <textarea id="txnNotes" placeholder="e.g. Invoice #204, 2 bags cement"></textarea>
+    </div>
+
+    <div class="error-text" id="txnError" style="display:none;"></div>
+    <button class="btn-block" id="txnSaveBtn">Save entry</button>
+  </div>
+</div>
+
+<!-- ===== Add / Edit Party Sheet ===== -->
+<div class="overlay" id="partyOverlay">
+  <div class="sheet">
+    <div class="sheet-head"><h2 id="partySheetTitle">New party</h2><button class="sheet-close" data-close="partyOverlay"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg></button></div>
+    <div class="field">
+      <label>Type</label>
+      <div class="seg" id="partyTypeSeg">
+        <button type="button" class="active" data-val="Customer">Customer</button>
+        <button type="button" data-val="Supplier">Supplier</button>
+      </div>
+    </div>
+    <div class="field"><label>Name</label><input type="text" id="partyName" placeholder="e.g. Nimal Traders"></div>
+    <div class="field"><label>Phone (optional)</label><input type="tel" id="partyPhone" placeholder="07X XXX XXXX"></div>
+    <div class="field"><label>Email (optional)</label><input type="email" id="partyEmail" placeholder="name@example.com"></div>
+    <div class="field"><label>Address (optional)</label><input type="text" id="partyAddress" placeholder="Shop / street / city"></div>
+    <div class="field"><label>Opening balance (optional)</label><div class="amount-input"><span class="cur">Rs.</span><input type="number" id="partyOpening" placeholder="0.00" step="0.01"></div><div class="hint">Any amount already due before you started using Khata.</div></div>
+    <div class="field"><label>Notes (optional)</label><textarea id="partyNotes" placeholder="e.g. Owner's other contact, business reg. no., preferred payment day…"></textarea></div>
+    <div class="error-text" id="partyError" style="display:none;"></div>
+    <button class="btn-block" id="partySaveBtn">Save party</button>
+  </div>
+</div>
+
+<!-- ===== Settings Sheet ===== -->
+<div class="overlay" id="settingsOverlay">
+  <div class="sheet">
+    <div class="sheet-head"><h2>Settings</h2><button class="sheet-close" data-close="settingsOverlay"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg></button></div>
+    <div class="field"><label>Web App URL</label><input type="url" id="settingsUrl" placeholder="https://script.google.com/macros/s/…/exec"></div>
+    <div class="connect-status" id="settingsStatus" style="text-align:left;"></div>
+    <button class="btn-block" id="settingsSaveBtn">Save &amp; reconnect</button>
+    <button class="btn-block btn-ghost" id="settingsRefreshBtn">Refresh data now</button>
+
+    <div class="section-title">WhatsApp reminders</div>
+    <div class="field"><label>Business name</label><input type="text" id="settingsBizName" placeholder="e.g. Nimal Traders"></div>
+    <div class="field"><label>Default country code</label><input type="text" id="settingsCountryCode" placeholder="94"><div class="hint">Used when a customer's phone number is saved without a country code (e.g. 07XXXXXXXX → 94).</div></div>
+    <div class="field"><label>Due reminder message</label><textarea id="settingsTplDue" rows="4"></textarea><div class="hint">Placeholders: {name} {amount} {business} {days}</div></div>
+    <div class="field"><label>Payment received message</label><textarea id="settingsTplPaid" rows="4"></textarea><div class="hint">Sent after you mark a customer's payment as collected.</div></div>
+    <div class="field"><label>Supplier balance reminder</label><textarea id="settingsTplSupplierDue" rows="4"></textarea><div class="hint">Sent from the Reminders tab to acknowledge a balance you still owe a supplier.</div></div>
+    <div class="field"><label>Supplier payment message</label><textarea id="settingsTplSupplier" rows="4"></textarea><div class="hint">Sent after you record a payment made to a supplier.</div></div>
+    <button class="btn-block btn-ghost" id="settingsTplSaveBtn">Save message settings</button>
+  </div>
+</div>
+
+<!-- ===== Confirm Sheet ===== -->
+<div class="overlay" id="confirmOverlay">
+  <div class="sheet">
+    <div class="sheet-head"><h2 id="confirmTitle">Are you sure?</h2><button class="sheet-close" data-close="confirmOverlay"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg></button></div>
+    <p id="confirmMsg" style="font-size:14px;color:var(--ink-soft);"></p>
+    <button class="btn-block btn-danger" id="confirmOkBtn">Confirm</button>
+    <button class="btn-block btn-ghost" data-close="confirmOverlay">Cancel</button>
+  </div>
+</div>
+
+<!-- ===== Reminder Round Overlay ===== -->
+<div class="overlay" id="roundOverlay">
+  <div class="sheet">
+    <div class="sheet-head"><h2>Reminder round</h2><button class="sheet-close" data-close="roundOverlay"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg></button></div>
+    <div id="roundBody"></div>
+  </div>
+</div>
+
+<div id="toastWrap"></div>
+
+<script>
+/* =========================================================
+   KHATA — Due & Collection Book
+   Vanilla JS, no build step. Talks to a Google Apps Script
+   Web App (see Code.gs) which reads/writes a Google Sheet.
+   ========================================================= */
+
+const CONFIG = {
+  CURRENCY: 'Rs. ',
+  CACHE_KEY: 'khata_cache_v1',
+  URL_KEY: 'khata_apps_script_url',
+  BIZ_KEY: 'khata_biz_name',
+  CC_KEY: 'khata_country_code',
+  TPL_DUE_KEY: 'khata_tpl_due',
+  TPL_PAID_KEY: 'khata_tpl_paid',
+  TPL_SUPPLIER_KEY: 'khata_tpl_supplier',
+  TPL_SUPPLIER_DUE_KEY: 'khata_tpl_supplier_due',
+  DEFAULT_TPL_DUE: 'Hello {name}, this is a reminder from {business} that your outstanding balance is {amount}. Kindly settle at your earliest convenience. Thank you!',
+  DEFAULT_TPL_PAID: "Hi {name}, we've received your payment of {amount}. Thank you for your business — {business}.",
+  DEFAULT_TPL_SUPPLIER: "Hi {name}, we've sent a payment of {amount} to you from {business}. Please confirm receipt. Thank you!",
+  DEFAULT_TPL_SUPPLIER_DUE: "Hi {name}, just a note from {business} — we have an outstanding balance of {amount} with you and will settle it soon. Thank you for your patience!"
+};
+
+/* ---------- storage ---------- */
+const Store = {
+  getUrl(){ return localStorage.getItem(CONFIG.URL_KEY) || ''; },
+  setUrl(u){ localStorage.setItem(CONFIG.URL_KEY, u); },
+  getCache(){
+    try { return JSON.parse(localStorage.getItem(CONFIG.CACHE_KEY)) || null; } catch(e){ return null; }
+  },
+  setCache(data){
+    try { localStorage.setItem(CONFIG.CACHE_KEY, JSON.stringify(data)); } catch(e){}
+  },
+  getBizName(){ return localStorage.getItem(CONFIG.BIZ_KEY) || ''; },
+  setBizName(v){ localStorage.setItem(CONFIG.BIZ_KEY, v); },
+  getCountryCode(){ return localStorage.getItem(CONFIG.CC_KEY) || '94'; },
+  setCountryCode(v){ localStorage.setItem(CONFIG.CC_KEY, v); },
+  getTplDue(){ return localStorage.getItem(CONFIG.TPL_DUE_KEY) || CONFIG.DEFAULT_TPL_DUE; },
+  setTplDue(v){ localStorage.setItem(CONFIG.TPL_DUE_KEY, v); },
+  getTplPaid(){ return localStorage.getItem(CONFIG.TPL_PAID_KEY) || CONFIG.DEFAULT_TPL_PAID; },
+  setTplPaid(v){ localStorage.setItem(CONFIG.TPL_PAID_KEY, v); },
+  getTplSupplier(){ return localStorage.getItem(CONFIG.TPL_SUPPLIER_KEY) || CONFIG.DEFAULT_TPL_SUPPLIER; },
+  setTplSupplier(v){ localStorage.setItem(CONFIG.TPL_SUPPLIER_KEY, v); },
+  getTplSupplierDue(){ return localStorage.getItem(CONFIG.TPL_SUPPLIER_DUE_KEY) || CONFIG.DEFAULT_TPL_SUPPLIER_DUE; },
+  setTplSupplierDue(v){ localStorage.setItem(CONFIG.TPL_SUPPLIER_DUE_KEY, v); }
+};
+
+/* ---------- api ---------- */
+const Api = {
+  base(){ return Store.getUrl(); },
+  async get(action, params){
+    const url = new URL(this.base());
+    url.searchParams.set('action', action);
+    if (params) Object.keys(params).forEach(k => { if (params[k]) url.searchParams.set(k, params[k]); });
+    const res = await fetch(url.toString(), { method:'GET' });
+    const json = await res.json();
+    if (!json.ok) throw new Error(json.error || 'Request failed');
+    return json.data;
+  },
+  async post(payload){
+    const res = await fetch(this.base(), {
+      method:'POST',
+      headers:{ 'Content-Type':'text/plain;charset=utf-8' },
+      body: JSON.stringify(payload)
+    });
+    const json = await res.json();
+    if (!json.ok) throw new Error(json.error || 'Request failed');
+    return json.data;
+  }
+};
+
+/* ---------- state ---------- */
+const State = {
+  parties: [],
+  transactions: [],
+  view: 'dashboard',
+  currentPartyId: null,
+  txnPartyType: 'Customer',
+  txnEntryType: 'DUE',
+  txnSelected: null, // {id, name, isNew}
+  loading: false,
+  lastListView: 'customers',
+  roundQueue: [],
+  roundIndex: 0
+};
+
+/* ---------- helpers ---------- */
+function money(n){
+  n = Number(n) || 0;
+  const neg = n < 0;
+  const abs = Math.abs(n);
+  const s = abs.toLocaleString('en-LK', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  return (neg ? '-' : '') + CONFIG.CURRENCY + s;
+}
+function todayISO(){
+  const d = new Date();
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+function prettyDate(iso){
+  if(!iso) return '';
+  const parts = iso.split('-');
+  if(parts.length<3) return iso;
+  const d = new Date(Number(parts[0]), Number(parts[1])-1, Number(parts[2]));
+  return d.toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'numeric' });
+}
+function initials(name){
+  return (name||'?').trim().split(/\s+/).slice(0,2).map(w=>w[0]).join('').toUpperCase();
+}
+function el(id){ return document.getElementById(id); }
+function qs(sel, root){ return (root||document).querySelector(sel); }
+function qsa(sel, root){ return Array.from((root||document).querySelectorAll(sel)); }
+
+function showToast(msg, type){
+  const t = document.createElement('div');
+  t.className = 'toast' + (type ? ' '+type : '');
+  t.textContent = msg;
+  el('toastWrap').appendChild(t);
+  setTimeout(()=>{ t.style.opacity='0'; t.style.transition='opacity .25s'; setTimeout(()=>t.remove(),250); }, 2400);
+}
+
+let confirmCb = null;
+function showConfirm(title, msg, onConfirm){
+  el('confirmTitle').textContent = title;
+  el('confirmMsg').textContent = msg;
+  confirmCb = onConfirm;
+  openOverlay('confirmOverlay');
+}
+el('confirmOkBtn').addEventListener('click', ()=>{
+  closeOverlay('confirmOverlay');
+  if (confirmCb) confirmCb();
+  confirmCb = null;
+});
+
+function openOverlay(id){ el(id).classList.add('open'); }
+function closeOverlay(id){ el(id).classList.remove('open'); }
+qsa('[data-close]').forEach(b => b.addEventListener('click', ()=> closeOverlay(b.getAttribute('data-close'))));
+qsa('.overlay').forEach(o => o.addEventListener('click', (e)=>{ if(e.target===o) closeOverlay(o.id); }));
+
+/* ---------- balances ---------- */
+function balanceFor(partyId){
+  const p = State.parties.find(x=>x.id===partyId);
+  if(!p) return 0;
+  if (typeof p.balance === 'number') return p.balance;
+  let bal = p.openingBalance || 0;
+  State.transactions.forEach(t=>{
+    if(t.partyId!==partyId) return;
+    bal += t.entryType==='DUE' ? t.amount : -t.amount;
+  });
+  return bal;
+}
+function totals(){
+  let receivable=0, payable=0;
+  State.parties.forEach(p=>{
+    const b = balanceFor(p.id);
+    if(p.type==='Customer') receivable += b;
+    else payable += b;
+  });
+  return { receivable, payable };
+}
+
+/* ---------- rendering: dashboard ---------- */
+function renderDashboard(){
+  const t = totals();
+  const net = t.receivable - t.payable;
+  el('netPosition').textContent = money(net);
+  el('netPosition').classList.toggle('negative', net<0);
+  el('netSub').textContent = net>=0 ? 'You are owed more than you owe' : 'You owe more than you are owed';
+  el('bdReceivable').textContent = money(t.receivable);
+  el('bdPayable').textContent = money(t.payable);
+  el('topReceivable').textContent = money(t.receivable);
+  el('topPayable').textContent = money(t.payable);
+
+  const nDue = dueCustomers().length;
+  el('dashRemindBanner').style.display = nDue ? 'flex' : 'none';
+  if(nDue) el('dashRemindTitle').textContent = nDue+' customer'+(nDue===1?'':'s')+' have a due balance';
+
+  const today = todayISO();
+  const todays = State.transactions.filter(x=>x.date===today);
+  el('todayList').innerHTML = todays.length ? todays.map(txnRowHtml).join('') :
+    `<div class="empty-state" style="padding:20px 10px;"><div class="s">No entries yet today. Tap the + button to add one.</div></div>`;
+
+  const recent = State.transactions.slice(0, 8);
+  el('recentList').innerHTML = recent.length ? recent.map(txnRowHtml).join('') :
+    `<div class="empty-state"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.5"><path d="M4 19h16M6 15l4-4 3 3 5-6"/></svg><div class="t">No activity yet</div><div class="s">Add your first due or collection to get started.</div></div>`;
+
+  qsa('#todayList .lr-del, #recentList .lr-del').forEach(b=>{
+    b.addEventListener('click',(e)=>{ e.stopPropagation(); confirmDeleteTxn(b.dataset.id); });
+  });
+}
+
+function txnRowHtml(t){
+  const party = State.parties.find(p=>p.id===t.partyId);
+  const label = t.entryType==='DUE' ? 'Due' : 'Collected/Paid';
+  return `<div class="ledger-row" style="margin-left:-16px;">
+    <div class="lr-top">
+      <div>
+        <div style="font-weight:600;font-size:13.5px;">${escapeHtml(party?party.name:t.partyName)}</div>
+        <span class="lr-type ${t.entryType}">${label}</span>
+      </div>
+      <div class="lr-amt ${t.entryType} num">${t.entryType==='DUE'?'+':'-'}${money(t.amount)}</div>
+    </div>
+    <div class="lr-bottom">
+      <div class="lr-date">${prettyDate(t.date)}${t.notes?' · '+escapeHtml(t.notes):''}</div>
+      <button class="lr-del" data-id="${t.id}"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8"><path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m3 0l-1 14a2 2 0 01-2 2H7a2 2 0 01-2-2L4 6"/></svg></button>
+    </div>
+  </div>`;
+}
+function escapeHtml(s){ return String(s==null?'':s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+/* ---------- WhatsApp reminders ---------- */
+function normalizePhone(phone){
+  if(!phone) return '';
+  let p = String(phone).replace(/[^\d+]/g, '');
+  if(p.startsWith('+')) p = p.slice(1);
+  const cc = (Store.getCountryCode()||'94').replace(/\D/g,'');
+  if(p.startsWith('0')) p = cc + p.slice(1);
+  else if(!p.startsWith(cc) && p.length<=10) p = cc + p;
+  return p;
+}
+function renderTemplate(tpl, vars){
+  return String(tpl||'').replace(/\{(\w+)\}/g, (m,k)=> (vars[k]!==undefined ? vars[k] : m));
+}
+function lastActivityISO(partyId){
+  const txns = State.transactions.filter(t=>t.partyId===partyId);
+  if(!txns.length) return null;
+  return txns.reduce((max,t)=> (!max || t.date>max) ? t.date : max, null);
+}
+function daysSince(iso){
+  if(!iso) return null;
+  const d = new Date(iso+'T00:00:00');
+  const today = new Date(todayISO()+'T00:00:00');
+  return Math.max(0, Math.round((today-d)/86400000));
+}
+function waLink(phone, message){
+  const n = normalizePhone(phone);
+  return 'https://wa.me/' + n + '?text=' + encodeURIComponent(message);
+}
+function messageFor(kind, p, amount){
+  const tpl = kind==='due' ? Store.getTplDue() : kind==='paid' ? Store.getTplPaid() : kind==='supplierDue' ? Store.getTplSupplierDue() : Store.getTplSupplier();
+  const last = lastActivityISO(p.id);
+  return renderTemplate(tpl, {
+    name: p.name,
+    amount: money(Math.abs(amount!=null?amount:balanceFor(p.id))),
+    business: Store.getBizName() || 'us',
+    days: daysSince(last)!=null ? daysSince(last) : '—'
+  });
+}
+async function markReminded(partyId){
+  const p = State.parties.find(x=>x.id===partyId);
+  if(p) p.lastRemindedAt = new Date().toISOString();
+  try{ await Api.post({ action:'markReminded', id: partyId }); }catch(e){ /* non-blocking */ }
+}
+function sendWhatsapp(partyId, kind, amount){
+  const p = State.parties.find(x=>x.id===partyId);
+  if(!p) return;
+  if(!p.phone){ showToast('Add a phone number for '+p.name+' first', 'error'); openPartySheet(p); return; }
+  const msg = messageFor(kind, p, amount);
+  window.open(waLink(p.phone, msg), '_blank');
+  markReminded(partyId);
+}
+
+/* ---------- rendering: party lists ---------- */
+function renderPartyList(type){
+  const listId = type==='Customer' ? 'customerList' : 'supplierList';
+  const searchId = type==='Customer' ? 'customerSearch' : 'supplierSearch';
+  const q = (el(searchId).value||'').toLowerCase().trim();
+  let items = State.parties.filter(p=>p.type===type);
+  if(q) items = items.filter(p=> p.name.toLowerCase().includes(q) || (p.phone||'').includes(q));
+  items = items.slice().sort((a,b)=> balanceFor(b.id) - balanceFor(a.id));
+
+  if(!items.length){
+    el(listId).innerHTML = `<div class="empty-state">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="1.5"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7"/></svg>
+      <div class="t">No ${type.toLowerCase()}s yet</div>
+      <div class="s">Add your first ${type.toLowerCase()} to start their ledger.</div>
+      <button class="btn-round" id="emptyAddPartyBtn" style="margin:14px auto 0;">+ Add ${type.toLowerCase()}</button>
+    </div>`;
+    el('emptyAddPartyBtn').addEventListener('click', ()=> openPartySheet(null, type));
+    return;
+  }
+  el(listId).innerHTML = items.map(p=>{
+    const bal = balanceFor(p.id);
+    const cls = bal>0.004 ? 'due' : 'paid';
+    const balText = bal>0.004 ? money(bal) : (bal<-0.004 ? 'Advance '+money(-bal) : 'Settled');
+    return `<div class="party-card" data-id="${p.id}">
+      <div class="avatar">${initials(p.name)}</div>
+      <div class="party-main">
+        <div class="nm">${escapeHtml(p.name)}</div>
+        ${p.phone?`<div class="ph">${escapeHtml(p.phone)}</div>`:''}
+      </div>
+      <div class="bal-pill ${cls} num">${balText}</div>
+    </div>`;
+  }).join('');
+  qsa('.party-card', el(listId)).forEach(c=>{
+    c.addEventListener('click', ()=> openPartyDetail(c.dataset.id));
+  });
+}
+
+/* ---------- rendering: reminders ---------- */
+function dueCustomers(){
+  return State.parties.filter(p=>p.type==='Customer' && balanceFor(p.id)>0.004)
+    .slice().sort((a,b)=> balanceFor(b.id)-balanceFor(a.id));
+}
+function duePayableSuppliers(){
+  return State.parties.filter(p=>p.type==='Supplier' && balanceFor(p.id)>0.004)
+    .slice().sort((a,b)=> balanceFor(b.id)-balanceFor(a.id));
+}
+function remindRowHtml(p, kind){
+  const bal = balanceFor(p.id);
+  const last = lastActivityISO(p.id);
+  const d = daysSince(last);
+  const metaBits = [];
+  if(p.phone) metaBits.push(escapeHtml(p.phone)); else metaBits.push('No phone number');
+  metaBits.push(d!=null ? d+' day'+(d===1?'':'s')+' since last entry' : 'No entries yet');
+  if(p.lastRemindedAt && String(p.lastRemindedAt).slice(0,10)===todayISO()) metaBits.push('✓ Reminded today');
+  const waSvg = '<svg viewBox="0 0 24 24" fill="currentColor" width="17" height="17"><path d="M17.5 14.4c-.3-.2-1.8-.9-2-1-.3-.1-.5-.2-.7.1-.2.3-.8 1-.9 1.2-.2.2-.3.2-.6.1-.3-.2-1.3-.5-2.4-1.5-.9-.8-1.5-1.8-1.7-2.1-.2-.3 0-.5.1-.6.1-.1.3-.3.4-.5.2-.2.2-.3.3-.5.1-.2 0-.4 0-.5C10 9 9.4 7.6 9.2 7c-.2-.5-.4-.5-.6-.5h-.5c-.2 0-.5.1-.7.3-.2.3-.9.9-.9 2.2s1 2.5 1.1 2.7c.1.2 2 3 4.7 4.3.7.3 1.2.5 1.6.6.7.2 1.3.2 1.8.1.5-.1 1.8-.7 2-1.5.2-.7.2-1.3.2-1.5-.1-.1-.3-.2-.6-.3z"/><path d="M12 2a10 10 0 00-8.5 15.2L2 22l4.9-1.5A10 10 0 1012 2zm0 18.2c-1.6 0-3.2-.4-4.5-1.2l-.3-.2-3.1 1 1-3-.2-.3A8.2 8.2 0 1112 20.2z"/></svg>';
+  return `<div class="remind-row" data-id="${p.id}">
+    <div class="rr-main" data-open="${p.id}">
+      <div class="nm">${escapeHtml(p.name)}</div>
+      <div class="meta">${metaBits.join(' · ')}</div>
+    </div>
+    <div class="rr-bal num">${money(bal)}</div>
+    <button class="wa-btn${p.phone?'':' nophone'}" data-wa="${p.id}" data-kind="${kind}">${waSvg}</button>
+  </div>`;
+}
+function renderReminders(){
+  const custs = dueCustomers();
+  const sups = duePayableSuppliers();
+  el('remindCustomerList').innerHTML = custs.length ? custs.map(p=>remindRowHtml(p,'due')).join('') :
+    `<div class="empty-state"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.5"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="9"/></svg><div class="t">All caught up</div><div class="s">No customers currently have an outstanding balance.</div></div>`;
+  el('remindSupplierHead').style.display = sups.length ? 'flex' : 'none';
+  el('remindSupplierList').innerHTML = sups.map(p=>remindRowHtml(p,'supplierDue')).join('');
+  qsa('.rr-main', el('view-reminders')).forEach(r=> r.addEventListener('click', ()=> openPartyDetail(r.dataset.open)));
+  qsa('.wa-btn', el('view-reminders')).forEach(b=> b.addEventListener('click', (e)=>{
+    e.stopPropagation();
+    sendWhatsapp(b.dataset.wa, b.dataset.kind);
+  }));
+  el('startRoundBtn').disabled = !custs.length;
+  updateReminderBadge();
+}
+function updateReminderBadge(){
+  const n = dueCustomers().length;
+  [el('navRemindBadge'), el('sideRemindBadge')].forEach(b=>{
+    if(!b) return;
+    b.style.display = n>0 ? 'flex' : 'none';
+    b.textContent = n>99 ? '99+' : String(n);
+  });
+}
+
+/* ---------- reminder round ---------- */
+function startRound(){
+  State.roundQueue = dueCustomers().map(p=>p.id);
+  State.roundIndex = 0;
+  if(!State.roundQueue.length){ showToast('No customers to remind', 'success'); return; }
+  openOverlay('roundOverlay');
+  renderRoundStep();
+}
+el('startRoundBtn').addEventListener('click', startRound);
+function renderRoundStep(){
+  const total = State.roundQueue.length;
+  if(State.roundIndex>=total){
+    el('roundBody').innerHTML = `<div class="round-empty"><div class="t" style="font-weight:700;color:var(--ink);margin-bottom:4px;">All done</div>Reminder round complete for ${total} customer${total===1?'':'s'}.</div>`;
+    return;
+  }
+  const p = State.parties.find(x=>x.id===State.roundQueue[State.roundIndex]);
+  if(!p){ State.roundIndex++; renderRoundStep(); return; }
+  const bal = balanceFor(p.id);
+  const msg = messageFor('due', p, bal);
+  el('roundBody').innerHTML = `
+    <div class="round-progress">${State.roundIndex+1} of ${total}</div>
+    <div class="round-track"><div class="fill" style="width:${Math.round(((State.roundIndex)/total)*100)}%"></div></div>
+    <div class="round-card">
+      <div class="avatar">${initials(p.name)}</div>
+      <div class="nm">${escapeHtml(p.name)}</div>
+      <div class="ph">${p.phone?escapeHtml(p.phone):'No phone number saved'}</div>
+      <div class="bal num">${money(bal)}</div>
+      <div class="bal-lbl">Outstanding</div>
+    </div>
+    <div class="round-msg">${escapeHtml(msg)}</div>
+    <div class="round-actions">
+      <button class="btn-block btn-ghost" id="roundSkipBtn" style="flex:1;">Skip</button>
+      <button class="btn-block round-send" id="roundSendBtn" style="flex:2;"><svg viewBox="0 0 24 24" fill="#fff"><path d="M17.5 14.4c-.3-.2-1.8-.9-2-1-.3-.1-.5-.2-.7.1-.2.3-.8 1-.9 1.2-.2.2-.3.2-.6.1-.3-.2-1.3-.5-2.4-1.5-.9-.8-1.5-1.8-1.7-2.1-.2-.3 0-.5.1-.6.1-.1.3-.3.4-.5.2-.2.2-.3.3-.5.1-.2 0-.4 0-.5C10 9 9.4 7.6 9.2 7c-.2-.5-.4-.5-.6-.5h-.5c-.2 0-.5.1-.7.3-.2.3-.9.9-.9 2.2s1 2.5 1.1 2.7c.1.2 2 3 4.7 4.3.7.3 1.2.5 1.6.6.7.2 1.3.2 1.8.1.5-.1 1.8-.7 2-1.5.2-.7.2-1.3.2-1.5-.1-.1-.3-.2-.6-.3z"/><path d="M12 2a10 10 0 00-8.5 15.2L2 22l4.9-1.5A10 10 0 1012 2zm0 18.2c-1.6 0-3.2-.4-4.5-1.2l-.3-.2-3.1 1 1-3-.2-.3A8.2 8.2 0 1112 20.2z"/></svg>${p.phone?'Send via WhatsApp':'Add phone number'}</button>
+    </div>`;
+  el('roundSkipBtn').addEventListener('click', ()=>{ State.roundIndex++; renderRoundStep(); });
+  el('roundSendBtn').addEventListener('click', ()=>{
+    if(!p.phone){ closeOverlay('roundOverlay'); openPartySheet(p); return; }
+    window.open(waLink(p.phone, msg), '_blank');
+    markReminded(p.id);
+    State.roundIndex++;
+    renderRoundStep();
+  });
+}
+
+/* ---------- rendering: party detail ---------- */
+function openPartyDetail(id){
+  State.currentPartyId = id;
+  const p = State.parties.find(x=>x.id===id);
+  if(p) State.lastListView = p.type==='Supplier' ? 'suppliers' : 'customers';
+  switchView('partyDetail');
+  renderPartyDetail();
+}
+function renderPartyDetail(){
+  const p = State.parties.find(x=>x.id===State.currentPartyId);
+  if(!p){ switchView('dashboard'); return; }
+  el('dtType').textContent = p.type;
+  el('dtName').textContent = p.name;
+  el('dtPhone').textContent = p.phone || '';
+  const addrBits = [p.address, p.email].filter(Boolean).join(' · ');
+  el('dtAddress').style.display = addrBits ? 'block' : 'none';
+  el('dtAddress').textContent = addrBits;
+  el('dtNotes').style.display = p.notes ? 'block' : 'none';
+  el('dtNotes').textContent = p.notes || '';
+  const bal = balanceFor(p.id);
+  const isCustomer = p.type==='Customer';
+  el('dtBalance').textContent = money(Math.abs(bal));
+  el('dtBalance').className = 'balnum num ' + (bal>0.004?'due':'paid');
+  el('dtBalanceLbl').textContent = bal>0.004 ? (isCustomer?'They owe you':'You owe them') : (bal<-0.004 ? 'Advance / overpaid' : 'Settled');
+  el('dtDueLbl').textContent = isCustomer ? 'Add due' : 'Add due';
+  el('dtPaidLbl').textContent = isCustomer ? 'Collect' : 'Pay';
+  el('dtWhatsapp').disabled = !(bal>0.004);
+  el('dtWhatsapp').style.opacity = (bal>0.004) ? '1' : '.4';
+
+  const txns = State.transactions.filter(t=>t.partyId===p.id);
+  if(!txns.length){
+    el('ledgerList').innerHTML = `<div class="empty-state"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.5"><path d="M4 19h16M6 15l4-4 3 3 5-6"/></svg><div class="t">No entries yet</div><div class="s">Add a due or a ${isCustomer?'collection':'payment'} to start this ledger.</div></div>`;
+    return;
+  }
+  // running balance shown alongside each row (walk oldest->newest then reverse for display)
+  const chron = txns.slice().sort((a,b)=> a.date===b.date ? new Date(a.createdAt)-new Date(b.createdAt) : (a.date<b.date?-1:1));
+  let running = p.openingBalance || 0;
+  const withRunning = chron.map(t=>{ running += t.entryType==='DUE'?t.amount:-t.amount; return Object.assign({}, t, { running }); });
+  withRunning.reverse();
+
+  el('ledgerList').innerHTML = withRunning.map(t=>{
+    const label = t.entryType==='DUE' ? 'Due' : (isCustomer?'Collected':'Paid');
+    return `<div class="ledger-row">
+      <div class="lr-top">
+        <span class="lr-type ${t.entryType}">${label}</span>
+        <div class="lr-amt ${t.entryType} num">${t.entryType==='DUE'?'+':'-'}${money(t.amount)}</div>
+      </div>
+      <div class="lr-bottom">
+        <div class="lr-date">${prettyDate(t.date)}</div>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span class="lr-date num">Bal ${money(t.running)}</span>
+          <button class="lr-del" data-id="${t.id}"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8"><path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m3 0l-1 14a2 2 0 01-2 2H7a2 2 0 01-2-2L4 6"/></svg></button>
+        </div>
+      </div>
+      ${t.notes?`<div class="lr-note">${escapeHtml(t.notes)}</div>`:''}
+    </div>`;
+  }).join('');
+  qsa('.lr-del', el('ledgerList')).forEach(b=>{
+    b.addEventListener('click',()=> confirmDeleteTxn(b.dataset.id));
+  });
+}
+
+/* ---------- view switching ---------- */
+function switchView(view){
+  State.view = view;
+  qsa('.view').forEach(v=>v.classList.remove('active'));
+  el('view-'+view).classList.add('active');
+  qsa('.sidebar .side-link').forEach(b=> b.classList.toggle('active', b.dataset.view===view));
+  qsa('.bottomnav > button[data-view]').forEach(b=> b.classList.toggle('active', b.dataset.view===view));
+  if(view==='customers') renderPartyList('Customer');
+  if(view==='suppliers') renderPartyList('Supplier');
+  if(view==='dashboard') renderDashboard();
+  if(view==='reminders') renderReminders();
+  updateReminderBadge();
+  window.scrollTo(0,0);
+}
+qsa('[data-view]').forEach(b=>{
+  b.addEventListener('click', ()=> switchView(b.dataset.view));
+});
+el('backBtn').addEventListener('click', ()=> switchView(State.lastListView || 'customers'));
+el('dashRemindBanner').addEventListener('click', ()=> switchView('reminders'));
+
+/* ---------- data refresh ---------- */
+async function refreshData(showSpinner){
+  if(State.loading) return;
+  State.loading = true;
+  try{
+    const data = await Api.get('getAll');
+    State.parties = data.parties || [];
+    State.transactions = data.transactions || [];
+    Store.setCache({ parties: State.parties, transactions: State.transactions, ts: Date.now() });
+    renderCurrentView();
+  }catch(err){
+    showToast('Could not refresh — showing last saved data', 'error');
+    console.error(err);
+  }finally{
+    State.loading = false;
+  }
+}
+function renderCurrentView(){
+  if(State.view==='dashboard') renderDashboard();
+  else if(State.view==='customers') renderPartyList('Customer');
+  else if(State.view==='suppliers') renderPartyList('Supplier');
+  else if(State.view==='partyDetail') renderPartyDetail();
+  else if(State.view==='reminders') renderReminders();
+  updateReminderBadge();
+}
+
+/* ---------- search ---------- */
+el('customerSearch').addEventListener('input', ()=> renderPartyList('Customer'));
+el('supplierSearch').addEventListener('input', ()=> renderPartyList('Supplier'));
+
+/* ---------- Add transaction sheet ---------- */
+function openTxnSheet(prefill){
+  el('txnError').style.display='none';
+  el('txnAmount').value='';
+  el('txnNotes').value='';
+  el('txnDate').value = todayISO();
+  State.txnSelected = null;
+  el('txnSelectedParty').style.display='none';
+  el('txnPartyPickField').style.display='block';
+  el('txnPartySearch').value='';
+
+  let type = 'Customer';
+  if(prefill && prefill.partyId){
+    const p = State.parties.find(x=>x.id===prefill.partyId);
+    if(p){
+      type = p.type;
+      State.txnSelected = { id:p.id, name:p.name, isNew:false };
+      el('txnSelectedPartyName').textContent = p.name;
+      el('txnSelectedParty').style.display='flex';
+      el('txnPartyPickField').style.display='none';
+    }
+  }
+  setTxnPartyType(type);
+  setTxnEntryType(prefill && prefill.entryType ? prefill.entryType : 'DUE');
+  renderTxnPartyPicker();
+  openOverlay('txnOverlay');
+}
+function setTxnPartyType(type){
+  State.txnPartyType = type;
+  qsa('#txnPartyTypeSeg button').forEach(b=> b.classList.toggle('active', b.dataset.val===type));
+  updateTxnEntryHint();
+  renderTxnPartyPicker();
+}
+qsa('#txnPartyTypeSeg button').forEach(b=> b.addEventListener('click', ()=>{
+  if(State.txnSelected) return; // locked once a party is chosen from detail view
+  setTxnPartyType(b.dataset.val);
+}));
+
+function setTxnEntryType(t){
+  State.txnEntryType = t;
+  qsa('#txnEntrySeg button').forEach(b=> b.classList.toggle('active', b.dataset.val===t));
+  updateTxnEntryHint();
+}
+qsa('#txnEntrySeg button').forEach(b=> b.addEventListener('click', ()=> setTxnEntryType(b.dataset.val)));
+function updateTxnEntryHint(){
+  const isCustomer = State.txnPartyType==='Customer';
+  el('txnPaidOpt').textContent = isCustomer ? 'Collected' : 'Paid';
+  if(State.txnEntryType==='DUE'){
+    el('txnEntryHint').textContent = isCustomer ? 'Money the customer now owes you (credit sale).' : 'Money you now owe the supplier (credit purchase).';
+  }else{
+    el('txnEntryHint').textContent = isCustomer ? 'Payment received from the customer.' : 'Payment you made to the supplier.';
+  }
+}
+
+el('txnPartySearch').addEventListener('input', renderTxnPartyPicker);
+function renderTxnPartyPicker(){
+  const q = el('txnPartySearch').value.toLowerCase().trim();
+  const items = State.parties.filter(p=>p.type===State.txnPartyType && (!q || p.name.toLowerCase().includes(q)));
+  let html = '';
+  items.forEach(p=>{
+    html += `<div class="pp-item" data-id="${p.id}" data-name="${escapeHtml(p.name)}"><span>${escapeHtml(p.name)}</span><span class="pp-bal num">${money(balanceFor(p.id))}</span></div>`;
+  });
+  if(q && !items.some(p=>p.name.toLowerCase()===q)){
+    html += `<div class="pp-item" data-new="1" data-name="${escapeHtml(el('txnPartySearch').value.trim())}"><span>+ Add "${escapeHtml(el('txnPartySearch').value.trim())}" as new ${State.txnPartyType.toLowerCase()}</span></div>`;
+  }
+  if(!html) html = `<div class="pp-empty">Type a name to search or add a new ${State.txnPartyType.toLowerCase()}.</div>`;
+  el('txnPartyPickerList').innerHTML = html;
+  qsa('.pp-item[data-id]', el('txnPartyPickerList')).forEach(it=>{
+    it.addEventListener('click', ()=> selectTxnParty(it.dataset.id, it.dataset.name, false));
+  });
+  qsa('.pp-item[data-new]', el('txnPartyPickerList')).forEach(it=>{
+    it.addEventListener('click', ()=> selectTxnParty(null, it.dataset.name, true));
+  });
+}
+function selectTxnParty(id, name, isNew){
+  if(!name) return;
+  State.txnSelected = { id, name, isNew };
+  el('txnSelectedPartyName').textContent = name + (isNew?' (new)':'');
+  el('txnSelectedParty').style.display='flex';
+  el('txnPartyPickField').style.display='none';
+}
+el('txnClearParty').addEventListener('click', ()=>{
+  State.txnSelected = null;
+  el('txnSelectedParty').style.display='none';
+  el('txnPartyPickField').style.display='block';
+  el('txnPartySearch').value='';
+  renderTxnPartyPicker();
+});
+
+el('txnSaveBtn').addEventListener('click', async ()=>{
+  const amt = parseFloat(el('txnAmount').value);
+  const date = el('txnDate').value || todayISO();
+  const notes = el('txnNotes').value.trim();
+  if(!State.txnSelected){ showTxnError('Choose or add a party first.'); return; }
+  if(!amt || amt<=0){ showTxnError('Enter an amount greater than 0.'); return; }
+  el('txnSaveBtn').disabled = true;
+  el('txnSaveBtn').textContent = 'Saving…';
+  try{
+    let partyId = State.txnSelected.id;
+    let partyName = State.txnSelected.name;
+    if(State.txnSelected.isNew){
+      const created = await Api.post({ action:'addParty', type: State.txnPartyType, name: partyName, phone:'', openingBalance:0 });
+      partyId = created.id;
+    }
+    await Api.post({
+      action:'addTransaction', partyId, partyName, partyType: State.txnPartyType,
+      date, entryType: State.txnEntryType, amount: amt, notes
+    });
+    closeOverlay('txnOverlay');
+    showToast('Entry saved', 'success');
+    await refreshData();
+    if(State.txnEntryType==='PAID'){
+      const p = State.parties.find(x=>x.id===partyId);
+      if(p && p.phone){
+        const kind = State.txnPartyType==='Customer' ? 'paid' : 'supplier';
+        showConfirm('Send WhatsApp receipt?',
+          'Let '+partyName+' know via WhatsApp that the payment of '+money(amt)+' was received?',
+          ()=> sendWhatsapp(partyId, kind, amt));
+      }
+    }
+  }catch(err){
+    showTxnError(err.message || 'Something went wrong. Please try again.');
+  }finally{
+    el('txnSaveBtn').disabled = false;
+    el('txnSaveBtn').textContent = 'Save entry';
+  }
+});
+function showTxnError(msg){ el('txnError').textContent = msg; el('txnError').style.display='block'; }
+
+/* quick action wiring */
+el('fabAdd').addEventListener('click', ()=> openTxnSheet());
+el('sideAddBtn') && el('sideAddBtn').addEventListener('click', ()=> openTxnSheet());
+el('qaDue').addEventListener('click', ()=> openTxnSheet({ entryType:'DUE' }));
+el('qaPaid').addEventListener('click', ()=> openTxnSheet({ entryType:'PAID' }));
+el('dtAddDue').addEventListener('click', ()=> openTxnSheet({ partyId: State.currentPartyId, entryType:'DUE' }));
+el('dtAddPaid').addEventListener('click', ()=> openTxnSheet({ partyId: State.currentPartyId, entryType:'PAID' }));
+el('dtWhatsapp').addEventListener('click', ()=>{
+  const p = State.parties.find(x=>x.id===State.currentPartyId);
+  if(!p) return;
+  sendWhatsapp(p.id, p.type==='Customer'?'due':'supplierDue');
+});
+
+function confirmDeleteTxn(id){
+  showConfirm('Delete this entry?', 'This removes the entry from your Google Sheet permanently.', async ()=>{
+    try{
+      await Api.post({ action:'deleteTransaction', id });
+      showToast('Entry deleted', 'success');
+      await refreshData();
+    }catch(err){ showToast(err.message || 'Could not delete', 'error'); }
+  });
+}
+
+/* ---------- Party sheet (add/edit party) ---------- */
+let partyEditId = null;
+let partySheetType = 'Customer';
+function openPartySheet(editParty, presetType){
+  el('partyError').style.display='none';
+  partyEditId = editParty ? editParty.id : null;
+  el('partySheetTitle').textContent = editParty ? 'Edit party' : ('New '+(presetType||'Customer').toLowerCase());
+  el('partyName').value = editParty ? editParty.name : '';
+  el('partyPhone').value = editParty ? (editParty.phone||'') : '';
+  el('partyEmail').value = editParty ? (editParty.email||'') : '';
+  el('partyAddress').value = editParty ? (editParty.address||'') : '';
+  el('partyNotes').value = editParty ? (editParty.notes||'') : '';
+  el('partyOpening').value = editParty ? (editParty.openingBalance||'') : '';
+  partySheetType = editParty ? editParty.type : (presetType || 'Customer');
+  qsa('#partyTypeSeg button').forEach(b=> b.classList.toggle('active', b.dataset.val===partySheetType));
+  const typeField = el('partyTypeSeg').closest('.field');
+  typeField.style.opacity = editParty ? '.55' : '1';
+  typeField.style.pointerEvents = editParty ? 'none' : 'auto';
+  openOverlay('partyOverlay');
+}
+qsa('#partyTypeSeg button').forEach(b=> b.addEventListener('click', ()=>{
+  if(partyEditId) return; // type can't change once a party exists
+  partySheetType = b.dataset.val;
+  qsa('#partyTypeSeg button').forEach(x=> x.classList.toggle('active', x===b));
+}));
+el('addCustomerBtn').addEventListener('click', ()=> openPartySheet(null, 'Customer'));
+el('addSupplierBtn').addEventListener('click', ()=> openPartySheet(null, 'Supplier'));
+el('partySaveBtn').addEventListener('click', async ()=>{
+  const name = el('partyName').value.trim();
+  const phone = el('partyPhone').value.trim();
+  const email = el('partyEmail').value.trim();
+  const address = el('partyAddress').value.trim();
+  const notes = el('partyNotes').value.trim();
+  const opening = parseFloat(el('partyOpening').value) || 0;
+  if(!name){ el('partyError').textContent='Name is required.'; el('partyError').style.display='block'; return; }
+  el('partySaveBtn').disabled = true;
+  try{
+    if(partyEditId){
+      await Api.post({ action:'updateParty', id: partyEditId, name, phone, email, address, notes, openingBalance: opening });
+    }else{
+      await Api.post({ action:'addParty', type: partySheetType, name, phone, email, address, notes, openingBalance: opening });
+    }
+    closeOverlay('partyOverlay');
+    showToast('Party saved', 'success');
+    await refreshData();
+  }catch(err){
+    el('partyError').textContent = err.message || 'Something went wrong.';
+    el('partyError').style.display='block';
+  }finally{
+    el('partySaveBtn').disabled = false;
+  }
+});
+el('editPartyBtn').addEventListener('click', ()=>{
+  const p = State.parties.find(x=>x.id===State.currentPartyId);
+  if(p) openPartySheet(p);
+});
+el('deletePartyBtn').addEventListener('click', ()=>{
+  const p = State.parties.find(x=>x.id===State.currentPartyId);
+  if(!p) return;
+  showConfirm('Delete '+p.name+'?', 'This deletes the party and all of their ledger entries permanently.', async ()=>{
+    try{
+      await Api.post({ action:'deleteParty', id: p.id });
+      showToast('Party deleted', 'success');
+      switchView(p.type==='Customer'?'customers':'suppliers');
+      await refreshData();
+    }catch(err){ showToast(err.message||'Could not delete', 'error'); }
+  });
+});
+
+/* ---------- Settings / connect ---------- */
+async function testConnection(url){
+  const tmp = Store.getUrl();
+  Store.setUrl(url);
+  try{
+    await Api.get('ping');
+    return true;
+  }catch(e){
+    Store.setUrl(tmp);
+    throw e;
+  }
+}
+el('connectBtn').addEventListener('click', async ()=>{
+  const url = el('connectUrl').value.trim();
+  if(!url){ el('connectStatus').textContent='Paste your Web App URL first.'; el('connectStatus').className='connect-status bad'; return; }
+  el('connectBtn').disabled = true;
+  el('connectBtn').textContent = 'Connecting…';
+  try{
+    await testConnection(url);
+    el('connectStatus').textContent = 'Connected!';
+    el('connectStatus').className = 'connect-status ok';
+    await boot();
+  }catch(e){
+    el('connectStatus').textContent = 'Could not connect. Check the URL and that access is set to "Anyone".';
+    el('connectStatus').className = 'connect-status bad';
+  }finally{
+    el('connectBtn').disabled = false;
+    el('connectBtn').textContent = 'Connect';
+  }
+});
+
+el('settingsBtn').addEventListener('click', openSettings);
+el('navSettings').addEventListener('click', openSettings);
+function openSettings(){
+  el('settingsUrl').value = Store.getUrl();
+  el('settingsStatus').textContent='';
+  el('settingsBizName').value = Store.getBizName();
+  el('settingsCountryCode').value = Store.getCountryCode();
+  el('settingsTplDue').value = Store.getTplDue();
+  el('settingsTplPaid').value = Store.getTplPaid();
+  el('settingsTplSupplier').value = Store.getTplSupplier();
+  el('settingsTplSupplierDue').value = Store.getTplSupplierDue();
+  openOverlay('settingsOverlay');
+}
+el('settingsTplSaveBtn').addEventListener('click', ()=>{
+  Store.setBizName(el('settingsBizName').value.trim());
+  Store.setCountryCode(el('settingsCountryCode').value.trim() || '94');
+  Store.setTplDue(el('settingsTplDue').value.trim() || CONFIG.DEFAULT_TPL_DUE);
+  Store.setTplPaid(el('settingsTplPaid').value.trim() || CONFIG.DEFAULT_TPL_PAID);
+  Store.setTplSupplier(el('settingsTplSupplier').value.trim() || CONFIG.DEFAULT_TPL_SUPPLIER);
+  Store.setTplSupplierDue(el('settingsTplSupplierDue').value.trim() || CONFIG.DEFAULT_TPL_SUPPLIER_DUE);
+  showToast('Message settings saved', 'success');
+});
+el('settingsSaveBtn').addEventListener('click', async ()=>{
+  const url = el('settingsUrl').value.trim();
+  if(!url) return;
+  el('settingsSaveBtn').disabled = true;
+  try{
+    await testConnection(url);
+    el('settingsStatus').textContent = 'Connected. Refreshing…';
+    el('settingsStatus').className = 'connect-status ok';
+    await refreshData();
+    closeOverlay('settingsOverlay');
+    showToast('Reconnected', 'success');
+  }catch(e){
+    el('settingsStatus').textContent = 'Could not connect with that URL.';
+    el('settingsStatus').className = 'connect-status bad';
+  }finally{
+    el('settingsSaveBtn').disabled = false;
+  }
+});
+el('settingsRefreshBtn').addEventListener('click', async ()=>{
+  await refreshData();
+  showToast('Refreshed', 'success');
+});
+
+/* ---------- boot ---------- */
+async function boot(){
+  el('connectScreen').style.display='none';
+  el('app').style.display='block';
+  const cache = Store.getCache();
+  if(cache){
+    State.parties = cache.parties||[];
+    State.transactions = cache.transactions||[];
+    renderCurrentView();
+  }
+  await refreshData();
+}
+
+(function init(){
+  const url = Store.getUrl();
+  if(!url){
+    el('connectScreen').style.display='flex';
+  }else{
+    boot();
+  }
+})();
+</script>
+</body>
+</html>
