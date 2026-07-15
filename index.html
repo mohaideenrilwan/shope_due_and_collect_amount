@@ -743,6 +743,7 @@ const CONFIG = {
   CURRENCY: 'Rs. ',
   CACHE_KEY: 'khata_cache_v1',
   URL_KEY: 'khata_apps_script_url',
+  DEFAULT_URL: 'https://script.google.com/macros/s/AKfycbyDK82fd1i-QcCpCJoSyNfZIFMAP36HE1XjW_hIY67fyuvhQc0ITR3Wbms0nbSD0M1x/exec',
   BIZ_KEY: 'khata_biz_name',
   CC_KEY: 'khata_country_code',
   TPL_DUE_KEY: 'khata_tpl_due',
@@ -1548,7 +1549,11 @@ async function boot(){
 }
 
 (function init(){
-  const url = Store.getUrl();
+  let url = Store.getUrl();
+  if(!url && CONFIG.DEFAULT_URL){
+    url = CONFIG.DEFAULT_URL;
+    Store.setUrl(url);
+  }
   if(!url){
     el('connectScreen').style.display='flex';
   }else{
