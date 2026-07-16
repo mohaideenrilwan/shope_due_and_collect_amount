@@ -31,19 +31,21 @@
   --shadow:0 1px 2px rgba(30,42,68,.07),0 6px 16px rgba(30,42,68,.08);
   --nav-h:64px;
   --safe-b:env(safe-area-inset-bottom,0px);
+  --safe-t:env(safe-area-inset-top,0px);
 }
-*{box-sizing:border-box;}
-html,body{margin:0;padding:0;}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{margin:0;padding:0;overscroll-behavior-y:none;}
 body{
   font-family:var(--font-b);
   background:var(--paper);
   color:var(--ink);
   -webkit-font-smoothing:antialiased;
   min-height:100vh;
+  min-height:100dvh;
 }
 h1,h2,h3,.disp{font-family:var(--font-d);letter-spacing:-0.01em;}
-button{font-family:inherit;}
-input,select,textarea{font-family:inherit;}
+button{font-family:inherit;touch-action:manipulation;user-select:none;}
+input,select,textarea{font-family:inherit;touch-action:manipulation;-webkit-appearance:none;appearance:none;}
 ::selection{background:var(--brass-tint);}
 .num{font-variant-numeric:tabular-nums;font-feature-settings:"tnum";}
 a{color:inherit;}
@@ -54,7 +56,7 @@ a{color:inherit;}
   position:sticky;top:0;z-index:30;
   background:var(--ink);
   color:#F4F1E6;
-  padding:14px 16px 12px;
+  padding:calc(14px + var(--safe-t)) 16px 12px;
 }
 .topbar-row{display:flex;align-items:center;gap:12px;}
 .stamp{
@@ -129,10 +131,11 @@ main{flex:1;min-width:0;padding:16px 16px calc(var(--nav-h) + 28px);}
   box-shadow:0 -2px 10px rgba(30,42,68,.06);
 }
 .bottomnav button{
-  flex:1;border:none;background:none;display:flex;flex-direction:column;align-items:center;justify-content:center;
-  gap:3px;color:var(--ink-soft);font-size:10.5px;font-weight:600;cursor:pointer;
+  flex:1;min-width:0;border:none;background:none;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:3px;color:var(--ink-soft);font-size:clamp(9px,2.6vw,10.5px);font-weight:600;cursor:pointer;
+  padding:4px 2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
 }
-.bottomnav button svg{width:21px;height:21px;stroke:currentColor;}
+.bottomnav button svg{width:20px;height:20px;stroke:currentColor;flex:0 0 auto;}
 .bottomnav button.active{color:var(--brass-dark);}
 .fab{
   position:fixed;right:18px;bottom:calc(var(--nav-h) + var(--safe-b) + 14px);z-index:31;
@@ -193,7 +196,7 @@ main{flex:1;min-width:0;padding:16px 16px calc(var(--nav-h) + 28px);}
   border-radius:var(--radius-sm);padding:9px 12px;
 }
 .searchbar svg{width:16px;height:16px;stroke:var(--ink-soft);flex:0 0 auto;}
-.searchbar input{border:none;outline:none;background:none;flex:1;font-size:14px;color:var(--ink);}
+.searchbar input{border:none;outline:none;background:none;flex:1;font-size:16px;color:var(--ink);}
 .list-head{display:flex;gap:10px;margin-bottom:14px;}
 .list-head .searchbar{flex:1;min-width:0;}
 .list-add-btn{
@@ -311,7 +314,7 @@ main{flex:1;min-width:0;padding:16px 16px calc(var(--nav-h) + 28px);}
 .field label{display:block;font-size:12px;font-weight:600;color:var(--ink-soft);margin-bottom:6px;text-transform:uppercase;letter-spacing:.04em;}
 .field input,.field select,.field textarea{
   width:100%;border:1px solid var(--card-line);border-radius:var(--radius-sm);padding:11px 12px;
-  font-size:15px;color:var(--ink);background:#fff;outline:none;
+  font-size:16px;color:var(--ink);background:#fff;outline:none;
 }
 .field input:focus,.field select:focus,.field textarea:focus{border-color:var(--brass);}
 .field textarea{resize:vertical;min-height:60px;}
@@ -453,13 +456,13 @@ main{flex:1;min-width:0;padding:16px 16px calc(var(--nav-h) + 28px);}
 .round-empty{text-align:center;padding:30px 10px;color:var(--ink-soft);}
 
 .nav-badge{
-  position:absolute;top:2px;right:calc(50% - 20px);min-width:15px;height:15px;border-radius:8px;
+  position:absolute;top:2px;left:50%;margin-left:4px;min-width:15px;height:15px;border-radius:8px;
   background:var(--due);color:#fff;font-size:9.5px;font-weight:700;display:flex;align-items:center;justify-content:center;
   padding:0 3px;
 }
 .bottomnav button{position:relative;}
 .side-link{position:relative;}
-.side-link .nav-badge{top:8px;right:auto;left:30px;}
+.side-link .nav-badge{top:8px;left:auto;margin-left:0;right:14px;}
 </style>
 </head>
 <body>
@@ -484,8 +487,8 @@ main{flex:1;min-width:0;padding:16px 16px calc(var(--nav-h) + 28px);}
     <div class="topbar-row">
       <div class="stamp"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="9"/></svg></div>
       <div class="wordmark">
-        <div class="brand">Khata</div>
-        <div class="tag">Due &amp; collection book</div>
+        <div class="brand" id="brandName">Khata</div>
+        <div class="tag" id="brandTag">Due &amp; collection book</div>
       </div>
       <button class="icon-btn" id="settingsBtn" aria-label="Settings">
         <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 00.34 1.87l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.7 1.7 0 00-1.87-.34 1.7 1.7 0 00-1 1.55V21a2 2 0 01-4 0v-.09a1.7 1.7 0 00-1-1.55 1.7 1.7 0 00-1.87.34l-.06.06a2 2 0 11-2.83-2.83l.06-.06a1.7 1.7 0 00.34-1.87 1.7 1.7 0 00-1.55-1H3a2 2 0 010-4h.09a1.7 1.7 0 001.55-1 1.7 1.7 0 00-.34-1.87l-.06-.06a2 2 0 112.83-2.83l.06.06a1.7 1.7 0 001.87.34H9a1.7 1.7 0 001-1.55V3a2 2 0 014 0v.09a1.7 1.7 0 001 1.55 1.7 1.7 0 001.87-.34l.06-.06a2 2 0 112.83 2.83l-.06.06a1.7 1.7 0 00-.34 1.87V9a1.7 1.7 0 001.55 1H21a2 2 0 010 4h-.09a1.7 1.7 0 00-1.55 1z"/></svg>
@@ -803,6 +806,19 @@ const Api = {
     return json.data;
   }
 };
+function friendlyErrorMsg(err){
+  const raw = String(err && err.message || err || '');
+  if(/Failed to fetch|NetworkError|Load failed/i.test(raw)){
+    return 'Can\'t reach your Sheet. In Apps Script, check Deploy → Manage deployments → "Who has access" is set to Anyone, then deploy a new version.';
+  }
+  return raw || 'Something went wrong.';
+}
+function applyBranding(){
+  const biz = Store.getBizName();
+  el('brandName').textContent = biz || 'Khata';
+  el('brandTag').textContent = biz ? 'Khata — Due & collection book' : 'Due & collection book';
+  document.title = biz ? (biz+' — Khata') : 'Khata — Due & Collection Book';
+}
 
 /* ---------- state ---------- */
 const State = {
@@ -1219,7 +1235,7 @@ async function refreshData(showSpinner){
     Store.setCache({ parties: State.parties, transactions: State.transactions, ts: Date.now() });
     renderCurrentView();
   }catch(err){
-    showToast('Could not refresh — showing last saved data', 'error');
+    showToast(friendlyErrorMsg(err), 'error');
     console.error(err);
   }finally{
     State.loading = false;
@@ -1482,7 +1498,7 @@ el('connectBtn').addEventListener('click', async ()=>{
     el('connectStatus').className = 'connect-status ok';
     await boot();
   }catch(e){
-    el('connectStatus').textContent = 'Could not connect. Check the URL and that access is set to "Anyone".';
+    el('connectStatus').textContent = friendlyErrorMsg(e);
     el('connectStatus').className = 'connect-status bad';
   }finally{
     el('connectBtn').disabled = false;
@@ -1510,6 +1526,7 @@ el('settingsTplSaveBtn').addEventListener('click', ()=>{
   Store.setTplPaid(el('settingsTplPaid').value.trim() || CONFIG.DEFAULT_TPL_PAID);
   Store.setTplSupplier(el('settingsTplSupplier').value.trim() || CONFIG.DEFAULT_TPL_SUPPLIER);
   Store.setTplSupplierDue(el('settingsTplSupplierDue').value.trim() || CONFIG.DEFAULT_TPL_SUPPLIER_DUE);
+  applyBranding();
   showToast('Message settings saved', 'success');
 });
 el('settingsSaveBtn').addEventListener('click', async ()=>{
@@ -1524,7 +1541,7 @@ el('settingsSaveBtn').addEventListener('click', async ()=>{
     closeOverlay('settingsOverlay');
     showToast('Reconnected', 'success');
   }catch(e){
-    el('settingsStatus').textContent = 'Could not connect with that URL.';
+    el('settingsStatus').textContent = friendlyErrorMsg(e);
     el('settingsStatus').className = 'connect-status bad';
   }finally{
     el('settingsSaveBtn').disabled = false;
@@ -1539,6 +1556,7 @@ el('settingsRefreshBtn').addEventListener('click', async ()=>{
 async function boot(){
   el('connectScreen').style.display='none';
   el('app').style.display='block';
+  applyBranding();
   const cache = Store.getCache();
   if(cache){
     State.parties = cache.parties||[];
